@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<title>REST Practice</title>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="main.css">
+    <script>
+        /* global $ */
+        var movieArray = ["","A New Hope","The Empire Strikes Back","Return of the Jedi","The Phantom Menace","Attack of the Clones","Revenge of the Sith","The Force Awakens"];
+        var language = 'english';
+        $(document).ready(function() {
+            //category click function
+            $('.category').click(function(e) {
+                var category = $(e.currentTarget)[0].id;
+                var response = getRandomFact(category);
+            });
+
+            //language toggle function
+            $('.toggle').click(function(e) {
+                language = $(e.currentTarget)[0].id;
+                if (language == 'wookie') {
+                    $("#wookie").addClass('selected');
+                    $('#english').removeClass('selected')
+                }
+                else if (language == 'english') {
+                    $("#english").addClass('selected');
+                    $('#wookie').removeClass('selected')
+                }
+            })
+
+        });
+
+        function getRandomFact(category) {
+            var myText = $('textInput').val();
+            var maxInt = (category == "films") ? 7 : 36;
+            var randInt = Math.floor(Math.random() * Math.floor(maxInt));
+            var wookie = ($('#wookie').hasClass('selected')) ? "?format=wookiee" : "";
+            var myurl = "https://swapi.co/api/" + category + "/" + randInt + "/" + wookie;
+            if(wookie && category == "films"){
+                var message = "<h3>Aarrragghuuhw Huurh</h3>"
+                message += "<p>...Sorry, film info doesn't translate well. Try this request again in english</p>"
+                $("#output").html(message);
+                return;
+            }
+            $.ajax({
+                url: myurl,
+                crossDomain: true,
+                dataType: 'json',
+                success: function(parsed_json) {
+                    var information = "";
+                    if(language == 'english')
+                    {
+                        switch(category)
+                        {
+                            case "people":
+                                information += "<h3>Character</h3>";
+                                information += "<h3>" + parsed_json["name"] + "</h3>";
+                                information += "<p>Height: " + centimetersToFeet(parsed_json["height"] + "</p>");
+                                information += "<p>Weight: " + kgToPounds(parsed_json["mass"]) + "</p>";
+                                break;
+
+                            case "planets":
+                                information += "<h3>Planet</h3>";
+                                information += "<h2>" + parsed_json["name"] + "</h2>";
+                                information += "<p>Diameter: " + kmToMiles(parsed_json["diameter"]) + "</p>";
+                                information += "<p>Climate: " + parsed_json["climate"] + "</p>";
+
+                                break;
+
+                            case "starships":
+                                information += "<h3>Starship</h3>";
+                                information += "<h3>" + parsed_json["name"] + "</h3>";
+                                information += "<p>Length: " + metersToFeet(parsed_json["length"]) + "</p>";
+                                information += "<p>Crew Size: " + parsed_json["crew"] + "</p>";
+
+                                break;
+
+                            case "species":
+                                information += "<h3>Species</h3>";
+                                information += "<h3>" + parsed_json["name"] + "</h3>";
+                                information += "<p>Language: " + parsed_json["language"] + "</p>";
+                                information += "<p>Average Height: " + centimetersToFeet(parsed_json["average_height"]) + "</p>";
+                                information += "<p>Skin Color(s): " + parsed_json["skin_colors"] + "</p>";
+                                information += "<p>Average Lifespan: " + parsed_json["average_lifespan"] + "</p>";
+                                break;
+                            case "films":
+                                information += "<h3>Film</h3>";
+                                information += "<h3>Star Wars Episode " + romanNumeralify(parsed_json["episode_id"]) + ": " + parsed_json["title"] + "</h3>";
+                                information += "<p>Director: " + parsed_json["director"] + "</p>";
+                                information += "<p>Producer: " + parsed_json["producer"] + "</p>";
+                                information += "<p>Release Date: " + dateReadable(parsed_json["release_date"]) + "</p>";
+                                break;
+                        }
+                    if(category != "films")
+                    {
+                        if(parsed_json["films"].length > 0)
+                        {
+                            information += "<p>Films:</p><ul>";
+
+                            $.each(parsed_json["films"], function(index, value){
+                                information += "<li>" + getMovieName(value) + "</li>";
+                            });
+                            information += "</ul>";
+                        }
+                    }
+                    }
+                    if(language == 'wookie')
+                    {
+                        switch(category)
+                        {
+                            case "people":
+                                information += "<h3>" + parsed_json["whrascwo"] + "</h3>";
+                                information += "<p>Acwoahrracao: " + centimetersToFeet(parsed_json["acwoahrracao"]) + "</p>";
+                                information += "<p>Scracc: " + kgToPounds(parsed_json["scracc"]) + "</p>";
+                                break;
+
+                            case "planets":
+                                information += "<h3>" + parsed_json["whrascwo"] + "</h3>";
+                                information += "<p>Waahrascwoaoworc: " + kmToMiles(parsed_json["waahrascwoaoworc"]) + "</p>";
+                                information += "<p>Oaanahscraaowo: " + parsed_json["oaanahscraaowo"] + "</p>";
+
+                                break;
+
+                            case "starships":
+                                information += "<h3>" + parsed_json["whrascwo"] + "</h3>";
+                                information += "<p>Anwowhrraoac: " + metersToFeet(parsed_json["anwowhrraoac"]) + "</p>";
+                                information += "<p>Oarcwooh: " + parsed_json["oarcwooh"] + "</p>";
+
+                                break;
+
+                            case "species":
+                                information += "<h3>" + parsed_json["whrascwo"] + "</h3>";
+                                information += "<p>Wawocahrrwhraaoahoowh: " + parsed_json["wawocahrrwhraaoahoowh"] + "</p>";
+                                information += "<p>Corahwh Oaooanoorcc: " + parsed_json["corahwh_oaooanoorcc"] + "</p>";
+                                break;
+
+
+                        }
+                    }
+                    $("#output").html(information);
+
+                },
+                error: function(e) {
+                    console.log("ERROR");
+                    if (e.responseText == '{"detail":"Not found"}'
+                        || e.responseText == '{"wawoaoraahan":"Nooao wwoohuwhwa"}') {
+                        getRandomFact(category);
+                    }
+                }
+            });
+        }
+
+        function dateReadable(date)
+        {
+            var year = date.substring(0,4);
+            var month = date.substring(5,7);
+            var day = date.substring(8,10);
+            var months = ["","January","February","March","April","May","June","July","August","September","October","November","December"];
+            return months[parseInt(month, 10)] + " " + parseInt(day, 10).toString() + ", " + year;
+        }
+
+        function getMovieName(myurl)
+        {
+            var movieNum = myurl.substring(27,28);
+            return movieArray[parseInt(movieNum, 10)];
+        }
+
+        function romanNumeralify(episodeNum)
+        {
+            var numerals = ["","I","II","III","IV","V","VI","VII"];
+            return numerals[parseInt(episodeNum, 10)];
+        }
+
+        function metersToFeet(length)
+        {
+            if(length == "unknown")
+                return length;
+            var meters = parseInt(length, 10);
+            var feet = Math.round(meters * 3.28084);
+            return feet.toString() + " feet";
+        }
+
+        function centimetersToFeet(height)
+        {
+            if(height == "unknown")
+                return height;
+            var centimeters = parseInt(height, 10);
+            var inches = Math.round(centimeters * .393701);
+            var feet = Math.floor(inches/12);
+            inches = inches % 12;
+            return feet.toString() + "\' " + inches.toString() + "\"";
+        }
+
+        function kgToPounds(weight)
+        {
+            if(weight == "unknown")
+                return weight;
+            var kilograms = parseInt(weight, 10);
+            var pounds = Math.round(kilograms * 2.20462);
+            return pounds.toString() + " pounds";
+        }
+
+        function kmToMiles(length)
+        {
+            if(length == "unkown")
+                return length;
+            var kilometers = parseInt(length, 10);
+            var miles = Math.round(kilometers * .621371);
+            return miles.toString() + " miles"
+        }
+    </script>
+</head>
+
+<body>
+    <div class="header">
+        <img class="logo" src="star-wars.png" alt="STAR WARS">
+        <h2>FACT GENERATOR</h2>
+    </div>
+    <div class="catTable">
+        <div class="category" id="people"><span class="catText">People</span></div>
+        <div class="category" id="planets"><span class="catText">Planets</span></div>
+        <div class="category" id="starships"><span class="catText">Starships</span></div>
+        <div class="category" id="species"><span class="catText">Species</span></div>
+        <div class="category" id="films"><span class="catText">Films</span></div>
+    </div>
+    <div class="toggleContainer">
+        <span class="toggle selected" id="english">English</span>
+        <span class="toggle" id="wookie">Wookie</span>
+    </div>
+    <div id="outputContainer"><div id="output"></div></div>
+</body>
+
+</html>
